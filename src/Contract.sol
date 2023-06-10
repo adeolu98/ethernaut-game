@@ -1,32 +1,37 @@
-//Unlock the vault to pass the level!
+// King
+
+
+
+// The contract below represents a very simple game: whoever sends it an amount of ether that is larger than the current prize becomes the new king. On such an event, the overthrown king gets paid the new prize, making a bit of ether in the process! As ponzi as it gets xD
+
+// Such a fun game. Your goal is to break it.
+
+// When you submit the instance back to the level, the level is going to reclaim kingship. You will beat the level if you can avoid such a self proclamation.
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Vault {
-  bool public locked;
+contract King {
 
-  //this level should be passed if we can somehow read the state of this private variable
-  //even private varibales can be read indirectly with web3.eth
+  address king;
+  uint public prize;
+  address public owner;
 
-
-  //we can do this by using the web3.eth function --> web3.eth.getStorageAt('contract addr', storage slot of the variable)
-  //await web3.eth.getStorageAt('0x6E2FE149DEe227A1ACB05c6c929789007e866609', 1), where 0x6E2FE149DEe227A1ACB05c6c929789007e866609 is the level address and 1 is the storage slot for the password
-  //each slot comtains max 32 bytes 
-  //varibale locked is bool so has one byte
-  //password variable is bytes32 so contains 32 bytes by default
-  //ranking them in order of appearance in code locked takes slot 0. 
-  //since slot 0 now has lefdt 31 bytes and this is not enough for password(32 bytes), it is pushed to slot 0
-  bytes32 private password;
-
-  constructor(bytes32 _password) {
-    locked = true;
-    password = _password;
+  constructor() payable {
+    owner = msg.sender;  
+    king = msg.sender;
+    prize = msg.value;
   }
 
-  function unlock(bytes32 _password) public {
-    if (password == _password) {
-      locked = false;
-    }
+// to break this i will create a new contract, use it to become king and make the fallback complex enough that it fails when someone else tries to become king.
+  receive() external payable {
+    require(msg.value >= prize || msg.sender == owner);
+    payable(king).transfer(msg.value);
+    king = msg.sender;
+    prize = msg.value;
+  }
+
+  function _king() public view returns (address) {
+    return king;
   }
 }
