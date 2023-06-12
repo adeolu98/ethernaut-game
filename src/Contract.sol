@@ -1,37 +1,39 @@
-// King
+// The goal of this level is for you to steal all the funds from the contract.
 
+//   Things that might help:
 
-
-// The contract below represents a very simple game: whoever sends it an amount of ether that is larger than the current prize becomes the new king. On such an event, the overthrown king gets paid the new prize, making a bit of ether in the process! As ponzi as it gets xD
-
-// Such a fun game. Your goal is to break it.
-
-// When you submit the instance back to the level, the level is going to reclaim kingship. You will beat the level if you can avoid such a self proclamation.
-
+// Untrusted contracts can execute code where you least expect it.
+// Fallback methods
+// Throw/revert bubbling
+// Sometimes the best way to attack a contract is with another contract.
+// See the "?" page above, section "Beyond the console"
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.6.12;
 
-contract King {
+import 'openzeppelin-contracts-06/math/SafeMath.sol';
 
-  address king;
-  uint public prize;
-  address public owner;
+contract Reentrance {
+  
+  using SafeMath for uint256;
+  mapping(address => uint) public balances;
 
-  constructor() payable {
-    owner = msg.sender;  
-    king = msg.sender;
-    prize = msg.value;
+  function donate(address _to) public payable {
+    balances[_to] = balances[_to].add(msg.value);
   }
 
-// to break this i will create a new contract, use it to become king and make the fallback complex enough that it fails when someone else tries to become king.
-  receive() external payable {
-    require(msg.value >= prize || msg.sender == owner);
-    payable(king).transfer(msg.value);
-    king = msg.sender;
-    prize = msg.value;
+  function balanceOf(address _who) public view returns (uint balance) {
+    return balances[_who];
   }
 
-  function _king() public view returns (address) {
-    return king;
+  function withdraw(uint _amount) public {
+    if(balances[msg.sender] >= _amount) {
+      (bool result,) = msg.sender.call{value:_amount}("");
+      if(result) {
+        _amount;
+      }
+      balances[msg.sender] -= _amount;
+    }
   }
+
+  receive() external payable {}
 }
