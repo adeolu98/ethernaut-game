@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.6.12;
+pragma solidity 0.8.0;
 
 import "forge-std/Script.sol";
 import "../src/Attacker.sol";
@@ -12,14 +12,10 @@ contract AttackScript is Script {
     //solveed by using the selfdestruct() to send ether to another contract
     function run() public {
         vm.startBroadcast();
-        Reentrance reentranceContract = Reentrance(0x74fFfbc41d7595a0d6C1187B969e8cd9B18458Ea);
-        Attacker attacker = new Attacker(reentranceContract);
-
-       (bool success, ) = payable(address(attacker)).call{value: 0.2 ether}("");
-       require(success == true, 'eth send failed');
+        address Elevator  = 0x2545C0d2473F1fe418d38dd0E4c2FC8E8a8D6BDe;
+        Attacker attacker = new Attacker(Elevator);
 
         attacker.attack();
-
         vm.stopBroadcast();
     }
 }

@@ -1,39 +1,26 @@
-// The goal of this level is for you to steal all the funds from the contract.
+// This elevator won't let you reach the top of your building. Right?
 
-//   Things that might help:
-
-// Untrusted contracts can execute code where you least expect it.
-// Fallback methods
-// Throw/revert bubbling
-// Sometimes the best way to attack a contract is with another contract.
-// See the "?" page above, section "Beyond the console"
+// Things that might help:
+// Sometimes solidity is not good at keeping promises.
+// This Elevator expects to be used from a Building.
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.0;
 
-import 'openzeppelin/math/SafeMath.sol';
+interface Building {
+  function isLastFloor(uint) external returns (bool);
+}
 
-contract Reentrance {
-  
-  using SafeMath for uint256;
-  mapping(address => uint) public balances;
 
-  function donate(address _to) public payable {
-    balances[_to] = balances[_to].add(msg.value);
-  }
+contract Elevator {
+  bool public top;
+  uint public floor;
 
-  function balanceOf(address _who) public view returns (uint balance) {
-    return balances[_who];
-  }
+  function goTo(uint _floor) public {
+    Building building = Building(msg.sender);
 
-  function withdraw(uint _amount) public {
-    if(balances[msg.sender] >= _amount) {
-      (bool result,) = msg.sender.call{value:_amount}("");
-      if(result) {
-        _amount;
-      }
-      balances[msg.sender] -= _amount;
+    if (! building.isLastFloor(_floor)) {
+      floor = _floor;
+      top = building.isLastFloor(floor);
     }
   }
-
-  receive() external payable {}
 }
