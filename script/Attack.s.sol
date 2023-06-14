@@ -12,8 +12,8 @@ contract AttackScript is Script {
     //solveed by using the selfdestruct() to send ether to another contract
     function run() public {
         vm.startBroadcast();
-        address Elevator  = 0x2545C0d2473F1fe418d38dd0E4c2FC8E8a8D6BDe;
-        Attacker attacker = new Attacker(Elevator);
+        address elevator  = 0x2545C0d2473F1fe418d38dd0E4c2FC8E8a8D6BDe;
+        Attacker attacker = new Attacker(elevator);
 
         attacker.attack();
         vm.stopBroadcast();
