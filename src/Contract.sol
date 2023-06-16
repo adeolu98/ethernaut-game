@@ -1,52 +1,34 @@
-// The creator of this contract was careful enough to protect the sensitive areas of its storage.
-
-// Unlock this contract to beat the level.
+// Make it past the gatekeeper and register as an entrant to pass this level.
 
 // Things that might help:
-
-// Understanding how storage works
-// Understanding how parameter parsing works
-// Understanding how casting works
-// Tips:
-
-// Remember that metamask is just a commodity. Use another tool if it is presenting problems. Advanced gameplay could involve using remix, or your own web3 provider.
+// Remember what you've learned from the Telephone and Token levels.
+// You can learn more about the special function gasleft(), in Solidity's documentation (see here and here).
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Privacy {
+contract GatekeeperOne {
 
-//storage slot 0
-  bool public locked = true;
+  address public entrant;
 
-  //storage slot 1
-  uint256 public ID = block.timestamp;
-
-  //storage slot 2
-  uint8 private flattening = 10;
-  uint8 private denomination = 255;
-  uint16 private awkwardness = uint16(block.timestamp);
-
-  //takes storage slot 3 to 5
-  bytes32[3] private data;
-
-  constructor(bytes32[3] memory _data) {
-    data = _data;
-  }
-  
-  function unlock(bytes16 _key) public {
-    //valid _key is in storage slot 5
-    //read it via await web3.eth.getStorageAt('0x42d456038445cA6bdA8E1C8f95E3212FA81E5763', 5)
-    require(_key == bytes16(data[2]));
-    locked = false;
+  modifier gateOne() {
+    require(msg.sender != tx.origin);
+    _;
   }
 
-  /*
-    A bunch of super advanced solidity algorithms...
+  modifier gateTwo() {
+    require(gasleft() % 8191 == 0);
+    _;
+  }
 
-      ,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`
-      .,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,
-      *.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^         ,---/V\
-      `*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.    ~|__(o.o)
-      ^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'^`*.,*'  UU  UU
-  */
+  modifier gateThree(bytes8 _gateKey) {
+      require(uint32(uint64(_gateKey)) == uint16(uint64(_gateKey)), "GatekeeperOne: invalid gateThree part one");
+      require(uint32(uint64(_gateKey)) != uint64(_gateKey), "GatekeeperOne: invalid gateThree part two");
+      require(uint32(uint64(_gateKey)) == uint16(uint160(tx.origin)), "GatekeeperOne: invalid gateThree part three");
+    _;
+  }
+
+  function enter(bytes8 _gateKey) public gateOne gateTwo gateThree(_gateKey) returns (bool) {
+    entrant = tx.origin;
+    return true;
+  }
 }
