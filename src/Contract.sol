@@ -1,35 +1,48 @@
-// This gatekeeper introduces a few new challenges. Register as an entrant to pass this level.
+// NaughtCoin is an ERC20 token and you're already holding all of them. The catch is that you'll only be able to transfer them after a 10 year lockout period. Can you figure out how to get them out to another address so that you can transfer them freely? Complete this level by getting your token balance to 0.
 
-// Things that might help:
-// Remember what you've learned from getting past the first gatekeeper - the first gate is the same.
-// The assembly keyword in the second gate allows a contract to access functionality that is not native to vanilla Solidity. See here for more information. The extcodesize call in this gate will get the size of a contract's code at a given address - you can learn more about how and when this is set in section 7 of the yellow paper.
-// The ^ character in the third gate is a bitwise operation (XOR), and is used here to apply another common bitwise operation (see here). The Coin Flip level is also a good place to start when approaching this challenge.
+//   Things that might help
+
+// The ERC20 Spec
+// The OpenZeppelin codebase
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.6.5;
+pragma experimental ABIEncoderV2;
 
-contract GatekeeperTwo {
+import "openzeppelin/token/ERC20/ERC20.sol";
 
-  address public entrant;
+contract NaughtCoin is ERC20 {
+    // string public constant name = 'NaughtCoin';
+    // string public constant symbol = '0x0';
+    // uint public constant decimals = 18;
+    uint public timeLock = block.timestamp + 10 * 365 days;
+    uint256 public INITIAL_SUPPLY;
+    address public player;
 
-  modifier gateOne() {
-    require(msg.sender != tx.origin, 'is msg.sender');
-    _;
-  }
+    constructor(address _player) public ERC20("NaughtCoin", "0x0") {
+        player = _player;
+        INITIAL_SUPPLY = 1000000 * (10 ** uint256(decimals()));
+        // _totalSupply = INITIAL_SUPPLY;
+        // _balances[player] = INITIAL_SUPPLY;
+        _mint(player, INITIAL_SUPPLY);
+        emit Transfer(address(0), player, INITIAL_SUPPLY);
+    }
 
-  modifier gateTwo() {
-    uint x;
-    assembly { x := extcodesize(caller()) }
-    require(x == 0);
-    _;
-  }
+    //nice try to lock but lockTokens modifier not applied to all transfer functions in the token, i can use transferfrom to get it out  
 
-  modifier gateThree(bytes8 _gateKey) {
-    require(uint64(bytes8(keccak256(abi.encodePacked(msg.sender)))) ^ uint64(_gateKey) == type(uint64).max);
-    _;
-  }
+    function transfer(
+        address _to,
+        uint256 _value
+    ) public override lockTokens returns (bool) {
+        super.transfer(_to, _value);
+    }
 
-  function enter(bytes8 _gateKey) public gateOne gateTwo gateThree(_gateKey) returns (bool) {
-    entrant = tx.origin;
-    return true;
-  }
+    // Prevent the initial owner from transferring tokens until the timelock has passed
+    modifier lockTokens() {
+        if (msg.sender == player) {
+            require(block.timestamp > timeLock);
+            _;
+        } else {
+            _;
+        }
+    }
 }

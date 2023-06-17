@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.0;
+pragma solidity 0.6.5;
+pragma experimental ABIEncoderV2;
 
 import {console2} from "forge-std/console2.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
@@ -12,20 +13,27 @@ import "forge-std/console.sol";
 /// https://book.getfoundry.sh/forge/writing-tests
 contract AttackTest is StdCheats, Test {
     /// @dev A function invoked before each test case is run.
-    GatekeeperTwo gatekeeper;
+
     Attacker attacker;
+    NaughtCoin token;
     address alice = 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9;
 
     function setUp() public virtual {
         // Instantiate the contract-under-test.
         vm.prank(alice);
-         gatekeeper = new GatekeeperTwo();
-         attacker = new Attacker(gatekeeper);
+        token = new NaughtCoin(alice);
+        attacker = new Attacker(token);
+
     }
 
     function testAttack() public {
         vm.prank(alice);
         
-       // attacker.attack();
+        //approve stealing 
+        token.approve(address(attacker), token.balanceOf(msg.sender));
+        //steal tokens 
+        attacker.stealTokens(msg.sender);
     }
+
+
 }

