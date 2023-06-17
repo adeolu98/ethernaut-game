@@ -12,11 +12,12 @@ contract AttackScript is Script {
     Attacker attacker;
 
     function setUp() public {
+        vm.startBroadcast();
         attacker = new Attacker(gatekeeper);
     }
 
     function run() public {
-        vm.startBroadcast();
+        
         bytes8 gatekey = 0x808000000000C2A9;
 
         attacker.attack(gatekey);
