@@ -7,8 +7,8 @@ import "../src/Contract.sol";
 import "forge-std/console.sol";
 
 contract AttackScript is Script {
-    GatekeeperOne gatekeeper =
-        GatekeeperOne(0xDd109e136b6aBD18dC18154F21B8241D7bE0da6d);
+    GatekeeperTwo gatekeeper = 
+        GatekeeperTwo(0x4EC09e9168b33E4616Ec502944c9ef311e267ba3);
     Attacker attacker;
 
     function setUp() public {
@@ -16,11 +16,7 @@ contract AttackScript is Script {
         attacker = new Attacker(gatekeeper);
     }
 
-    function run() public {
+    function run() public{
         
-        bytes8 gatekey = 0x808000000000C2A9;
-
-        attacker.attack(gatekey);
-        vm.stopBroadcast();
     }
 }

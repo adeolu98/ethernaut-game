@@ -1,58 +1,35 @@
-// Make it past the gatekeeper and register as an entrant to pass this level.
+// This gatekeeper introduces a few new challenges. Register as an entrant to pass this level.
 
 // Things that might help:
-// Remember what you've learned from the Telephone and Token levels.
-// You can learn more about the special function gasleft(), in Solidity's documentation (see here and here).
+// Remember what you've learned from getting past the first gatekeeper - the first gate is the same.
+// The assembly keyword in the second gate allows a contract to access functionality that is not native to vanilla Solidity. See here for more information. The extcodesize call in this gate will get the size of a contract's code at a given address - you can learn more about how and when this is set in section 7 of the yellow paper.
+// The ^ character in the third gate is a bitwise operation (XOR), and is used here to apply another common bitwise operation (see here). The Coin Flip level is also a good place to start when approaching this challenge.
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract GatekeeperOne {
-    address public entrant;
-    address public owner;
+contract GatekeeperTwo {
 
-    constructor() {
-        owner = msg.sender;
-    }
+  address public entrant;
 
-    modifier gateOne() {
-        require(msg.sender != tx.origin, "not origin");
-        _;
-    }
+  modifier gateOne() {
+    require(msg.sender != tx.origin, 'is msg.sender');
+    _;
+  }
 
-    modifier gateTwo() {
-        require(gasleft() % 8191 == 0, "check gas");
-        _;
-    }
+  modifier gateTwo() {
+    uint x;
+    assembly { x := extcodesize(caller()) }
+    require(x == 0);
+    _;
+  }
 
-    //to pass this since my player (caller) is 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9
-    //break the 20 bytes address to smaller bytes equal to the uint types, when reducing bytes start counting bytes from the back(right) (loweest bytes start from the right), when increasing pad from the front(left)
+  modifier gateThree(bytes8 _gateKey) {
+    require(uint64(bytes8(keccak256(abi.encodePacked(msg.sender)))) ^ uint64(_gateKey) == type(uint64).max);
+    _;
+  }
 
-    // uint16(uint160(tx.origin)) = 0xC2A9
-    //uint32(uint64(_gateKey)) = 0x0000C2A9
-    //uint16(uint64(_gateKey)) = 0xC2A9
-    //since we dont want uint64(_gatekey) to be same as //uint32(uint64(_gateKey)) = 0x0000C2A9, we can increase uint32(uint64(_gateKey)) = 0x0000C2A9 with non zero values to pad it up to uint64, thus adding 4 more bytes
-    //uint64(_gatekey) = 0x808000000000C2A9
-
-    modifier gateThree(bytes8 _gateKey) {
-        require(
-            uint32(uint64(_gateKey)) == uint16(uint64(_gateKey)),
-            "GatekeeperOne: invalid gateThree part one"
-        );
-        require(
-            uint32(uint64(_gateKey)) != uint64(_gateKey),
-            "GatekeeperOne: invalid gateThree part two"
-        );
-        require(
-            uint32(uint64(_gateKey)) == uint16(uint160(tx.origin)),
-            "GatekeeperOne: invalid gateThree part three"
-        );
-        _;
-    }
-
-    function enter(
-        bytes8 _gateKey
-    ) public gateOne gateTwo gateThree(_gateKey) returns (bool) {
-        entrant = tx.origin;
-        return true;
-    }
+  function enter(bytes8 _gateKey) public gateOne gateTwo gateThree(_gateKey) returns (bool) {
+    entrant = tx.origin;
+    return true;
+  }
 }

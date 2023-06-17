@@ -12,23 +12,20 @@ import "forge-std/console.sol";
 /// https://book.getfoundry.sh/forge/writing-tests
 contract AttackTest is StdCheats, Test {
     /// @dev A function invoked before each test case is run.
-    GatekeeperOne gatekeeper;
+    GatekeeperTwo gatekeeper;
     Attacker attacker;
     address alice = 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9;
 
     function setUp() public virtual {
         // Instantiate the contract-under-test.
         vm.prank(alice);
-         gatekeeper = new GatekeeperOne();
+         gatekeeper = new GatekeeperTwo();
          attacker = new Attacker(gatekeeper);
-        console.log(gatekeeper.owner());
     }
 
     function testAttack() public {
-        bytes8 gatekey = 0x808000000000C2A9;
-
         vm.prank(alice);
         
-       attacker.attack(gatekey);
+       // attacker.attack();
     }
 }
