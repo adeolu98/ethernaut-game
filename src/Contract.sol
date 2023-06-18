@@ -1,60 +1,46 @@
-// This contract utilizes a library to store two different times for two different timezones. The constructor creates two instances of the library for each time to be stored.
+//A contract creator has built a very simple token factory contract. Anyone can create new tokens with ease. After deploying the first token contract, the creator sent 0.001 ether to obtain more tokens. They have since lost the contract address.
+//This level will be completed if you can recover (or remove) the 0.001 ether from the lost contract address.
 
-// The goal of this level is for you to claim ownership of the instance you are given.
-
-//   Things that might help
-
-// Look into Solidity's documentation on the delegatecall low level function, how it works, how it can be used to delegate operations to on-chain. libraries, and what implications it has on execution scope.
-// Understanding what it means for delegatecall to be context-preserving.
-// Understanding how storage variables are stored and accessed.
-// Understanding how casting works between different data types.
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Preservation {
+contract Recovery {
 
-  // public library contracts 
-  //slot 0
-  address public timeZone1Library;
-  //slot 1
-  address public timeZone2Library;
-  //slot 2
-  address public owner; 
-  //slot 3
-  uint storedTime;
-  // Sets the function signature for delegatecall
-  bytes4 constant setTimeSignature = bytes4(keccak256("setTime(uint256)"));
-
-  constructor(address _timeZone1LibraryAddress, address _timeZone2LibraryAddress) {
-    timeZone1Library = _timeZone1LibraryAddress; 
-    timeZone2Library = _timeZone2LibraryAddress; 
-    owner = msg.sender;
-  }
- 
-
- //to beat this challenge i will take advantage of storage collision clash between the Preservation contract and LibraryContract. 
- // use the  collision class to set stroage slot 0 in preservation to the uint type of your new attacker contract address. 
-
-
-  // set the time for timezone 1
-  function setFirstTime(uint _timeStamp) public {
-    timeZone1Library.delegatecall(abi.encodePacked(setTimeSignature, _timeStamp));
-  }
-
-  // set the time for timezone 2
-  function setSecondTime(uint _timeStamp) public {
-    timeZone2Library.delegatecall(abi.encodePacked(setTimeSignature, _timeStamp));
+  //generate tokens
+  function generateToken(string memory _name, uint256 _initialSupply) public {
+    new SimpleToken(_name, msg.sender, _initialSupply);
   }
 }
 
-// Simple library contract to set the time
-contract LibraryContract {
+//we can use the selfdestruct() logic in destroy to collect the ether from this address. 
+//I followed the history trail on etherscan to get the contract address for simpleToken lol
+//the address is 0xF347c892De4FbAed91d3b13bDe19dAe254410ce3 
 
-  // stores a timestamp 
-  //slot 0
-  uint storedTime;  
+contract SimpleToken {
 
-  function setTime(uint _time) public {
-    storedTime = _time;
+  string public name;
+  mapping (address => uint) public balances;
+
+  // constructor
+  constructor(string memory _name, address _creator, uint256 _initialSupply) {
+    name = _name;
+    balances[_creator] = _initialSupply;
+  }
+
+  // collect ether in return for tokens
+  receive() external payable {
+    balances[msg.sender] = msg.value * 10;
+  }
+
+  // allow transfers of tokens
+  function transfer(address _to, uint _amount) public { 
+    require(balances[msg.sender] >= _amount);
+    balances[msg.sender] = balances[msg.sender] - _amount;
+    balances[_to] = _amount;
+  }
+
+  // clean up after ourselves
+  function destroy(address payable _to) public {
+    selfdestruct(_to);
   }
 }
