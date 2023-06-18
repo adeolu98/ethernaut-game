@@ -38,8 +38,7 @@ contract AttackTest is StdCheats, Test {
         // now call preservation.setFirstTime again so that the code in our attacker setTime(uint) can execute and change the preservation contract owner 
         preservation.setFirstTime(1);
 
-        require(preservation.owner() == alice, 'owner not changed');
-
+        assertEq(preservation.owner(), alice, 'owner not alice');
     }
 
 
