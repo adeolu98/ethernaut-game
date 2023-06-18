@@ -1,48 +1,60 @@
-// NaughtCoin is an ERC20 token and you're already holding all of them. The catch is that you'll only be able to transfer them after a 10 year lockout period. Can you figure out how to get them out to another address so that you can transfer them freely? Complete this level by getting your token balance to 0.
+// This contract utilizes a library to store two different times for two different timezones. The constructor creates two instances of the library for each time to be stored.
+
+// The goal of this level is for you to claim ownership of the instance you are given.
 
 //   Things that might help
 
-// The ERC20 Spec
-// The OpenZeppelin codebase
+// Look into Solidity's documentation on the delegatecall low level function, how it works, how it can be used to delegate operations to on-chain. libraries, and what implications it has on execution scope.
+// Understanding what it means for delegatecall to be context-preserving.
+// Understanding how storage variables are stored and accessed.
+// Understanding how casting works between different data types.
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.5;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
-import "openzeppelin/token/ERC20/ERC20.sol";
+contract Preservation {
 
-contract NaughtCoin is ERC20 {
-    // string public constant name = 'NaughtCoin';
-    // string public constant symbol = '0x0';
-    // uint public constant decimals = 18;
-    uint public timeLock = block.timestamp + 10 * 365 days;
-    uint256 public INITIAL_SUPPLY;
-    address public player;
+  // public library contracts 
+  //slot 0
+  address public timeZone1Library;
+  //slot 1
+  address public timeZone2Library;
+  //slot 2
+  address public owner; 
+  //slot 3
+  uint storedTime;
+  // Sets the function signature for delegatecall
+  bytes4 constant setTimeSignature = bytes4(keccak256("setTime(uint256)"));
 
-    constructor(address _player) public ERC20("NaughtCoin", "0x0") {
-        player = _player;
-        INITIAL_SUPPLY = 1000000 * (10 ** uint256(decimals()));
-        // _totalSupply = INITIAL_SUPPLY;
-        // _balances[player] = INITIAL_SUPPLY;
-        _mint(player, INITIAL_SUPPLY);
-        emit Transfer(address(0), player, INITIAL_SUPPLY);
-    }
+  constructor(address _timeZone1LibraryAddress, address _timeZone2LibraryAddress) {
+    timeZone1Library = _timeZone1LibraryAddress; 
+    timeZone2Library = _timeZone2LibraryAddress; 
+    owner = msg.sender;
+  }
+ 
 
-    //nice try to lock but lockTokens modifier not applied to all transfer functions in the token, i can use transferfrom to get it out  
+ //to beat this challenge i will take advantage of storage collision clash between the Preservation contract and LibraryContract. 
+ // use the  collision class to set stroage slot 0 in preservation to the uint type of your new attacker contract address. 
 
-    function transfer(
-        address _to,
-        uint256 _value
-    ) public override lockTokens returns (bool) {
-        super.transfer(_to, _value);
-    }
 
-    // Prevent the initial owner from transferring tokens until the timelock has passed
-    modifier lockTokens() {
-        if (msg.sender == player) {
-            require(block.timestamp > timeLock);
-            _;
-        } else {
-            _;
-        }
-    }
+  // set the time for timezone 1
+  function setFirstTime(uint _timeStamp) public {
+    timeZone1Library.delegatecall(abi.encodePacked(setTimeSignature, _timeStamp));
+  }
+
+  // set the time for timezone 2
+  function setSecondTime(uint _timeStamp) public {
+    timeZone2Library.delegatecall(abi.encodePacked(setTimeSignature, _timeStamp));
+  }
+}
+
+// Simple library contract to set the time
+contract LibraryContract {
+
+  // stores a timestamp 
+  //slot 0
+  uint storedTime;  
+
+  function setTime(uint _time) public {
+    storedTime = _time;
+  }
 }

