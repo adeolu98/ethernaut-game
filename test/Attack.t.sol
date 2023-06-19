@@ -15,8 +15,6 @@ contract AttackTest is StdCheats, Test {
     /// @dev A function invoked before each test case is run.
 
     address alice = 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9;
-    SimpleToken lostTokenContract =
-        SimpleToken(payable(0xF347c892De4FbAed91d3b13bDe19dAe254410ce3));
 
     function setUp() public virtual {
         // Instantiate the contract-under-test.
@@ -25,8 +23,5 @@ contract AttackTest is StdCheats, Test {
 
     function testAttack() public {
         vm.prank(alice);
-        lostTokenContract.destroy(payable(msg.sender));
-
-        assertEq(address(lostTokenContract).balance, 0);
     }
 }

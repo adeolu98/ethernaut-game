@@ -1,46 +1,35 @@
-//A contract creator has built a very simple token factory contract. Anyone can create new tokens with ease. After deploying the first token contract, the creator sent 0.001 ether to obtain more tokens. They have since lost the contract address.
-//This level will be completed if you can recover (or remove) the 0.001 ether from the lost contract address.
+// To solve this level, you only need to provide the Ethernaut with a Solver, a contract that responds to whatIsTheMeaningOfLife() with the right number.
+
+// Easy right? Well... there's a catch.
+
+// The solver's code needs to be really tiny. Really reaaaaaallly tiny. Like freakin' really really itty-bitty tiny: 10 opcodes at most.
+
+// Hint: Perhaps its time to leave the comfort of the Solidity compiler momentarily, and build this one by hand O_o. That's right: Raw EVM bytecode.
+
+// Good luck!
 
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Recovery {
+contract MagicNum {
 
-  //generate tokens
-  function generateToken(string memory _name, uint256 _initialSupply) public {
-    new SimpleToken(_name, msg.sender, _initialSupply);
-  }
-}
+  address public solver;
 
-//we can use the selfdestruct() logic in destroy to collect the ether from this address. 
-//I followed the history trail on etherscan to get the contract address for simpleToken lol
-//the address is 0xF347c892De4FbAed91d3b13bDe19dAe254410ce3 
+  constructor() {}
 
-contract SimpleToken {
-
-  string public name;
-  mapping (address => uint) public balances;
-
-  // constructor
-  constructor(string memory _name, address _creator, uint256 _initialSupply) {
-    name = _name;
-    balances[_creator] = _initialSupply;
+  function setSolver(address _solver) public {
+    solver = _solver;
   }
 
-  // collect ether in return for tokens
-  receive() external payable {
-    balances[msg.sender] = msg.value * 10;
-  }
-
-  // allow transfers of tokens
-  function transfer(address _to, uint _amount) public { 
-    require(balances[msg.sender] >= _amount);
-    balances[msg.sender] = balances[msg.sender] - _amount;
-    balances[_to] = _amount;
-  }
-
-  // clean up after ourselves
-  function destroy(address payable _to) public {
-    selfdestruct(_to);
-  }
+  /*
+    ____________/\\\_______/\\\\\\\\\_____        
+     __________/\\\\\_____/\\\///////\\\___       
+      ________/\\\/\\\____\///______\//\\\__      
+       ______/\\\/\/\\\______________/\\\/___     
+        ____/\\\/__\/\\\___________/\\\//_____    
+         __/\\\\\\\\\\\\\\\\_____/\\\//________   
+          _\///////////\\\//____/\\\/___________  
+           ___________\/\\\_____/\\\\\\\\\\\\\\\_ 
+            ___________\///_____\///////////////__
+  */
 }
