@@ -1,35 +1,41 @@
-// To solve this level, you only need to provide the Ethernaut with a Solver, a contract that responds to whatIsTheMeaningOfLife() with the right number.
+// You've uncovered an Alien contract. Claim ownership to complete the level.
 
-// Easy right? Well... there's a catch.
+//   Things that might help
 
-// The solver's code needs to be really tiny. Really reaaaaaallly tiny. Like freakin' really really itty-bitty tiny: 10 opcodes at most.
-
-// Hint: Perhaps its time to leave the comfort of the Solidity compiler momentarily, and build this one by hand O_o. That's right: Raw EVM bytecode.
-
-// Good luck!
-
+// Understanding how array storage works
+// Understanding ABI specifications
+// Using a very underhanded approach
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract MagicNum {
+import 'openzeppelin/access/Ownable.sol';
 
-  address public solver;
+contract AlienCodex is Ownable {
 
-  constructor() {}
+//this has a owner variable so owner, contact are in slot 0
+  bool public contact;
 
-  function setSolver(address _solver) public {
-    solver = _solver;
+  //slot 1-257 for codex
+  bytes32[] public codex;
+
+  modifier contacted() {
+    assert(contact);
+    _;
+  }
+  
+  function makeContact() public {
+    contact = true;
   }
 
-  /*
-    ____________/\\\_______/\\\\\\\\\_____        
-     __________/\\\\\_____/\\\///////\\\___       
-      ________/\\\/\\\____\///______\//\\\__      
-       ______/\\\/\/\\\______________/\\\/___     
-        ____/\\\/__\/\\\___________/\\\//_____    
-         __/\\\\\\\\\\\\\\\\_____/\\\//________   
-          _\///////////\\\//____/\\\/___________  
-           ___________\/\\\_____/\\\\\\\\\\\\\\\_ 
-            ___________\///_____\///////////////__
-  */
+  function record(bytes32 _content) contacted public {
+    codex.push(_content);
+  }
+
+  function retract() contacted public {
+    codex.length--;
+  }
+
+  function revise(uint i, bytes32 _content) contacted public {
+    codex[i] = _content;
+  }
 }

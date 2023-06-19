@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import "forge-std/Test.sol";
 import "../src/Attacker.sol";
-import "../src/Contract.sol";
+//import "../src/Contract.sol";
 import "forge-std/console.sol";
 
 /// @dev If this is your first time with Forge, read this tutorial in the Foundry Book:
