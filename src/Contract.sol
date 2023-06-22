@@ -1,41 +1,39 @@
-// You've uncovered an Alien contract. Claim ownership to complete the level.
+// This is a simple wallet that drips funds over time. You can withdraw the funds slowly by becoming a withdrawing partner.
 
-//   Things that might help
+// If you can deny the owner from withdrawing funds when they call withdraw() (whilst the contract still has funds, and the transaction is of 1M gas or less) you will win this level.
 
-// Understanding how array storage works
-// Understanding ABI specifications
-// Using a very underhanded approach
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+contract Denial {
 
-import 'openzeppelin/access/Ownable.sol';
+    address public partner; // withdrawal partner - pay the gas, split the withdraw
+    address public constant owner = address(0xA9E);
+    uint timeLastWithdrawn;
+    mapping(address => uint) withdrawPartnerBalances; // keep track of partners balances
 
-contract AlienCodex is Ownable {
+    function setWithdrawPartner(address _partner) public {
+        partner = _partner;
+    }
 
-//this has a owner variable so owner, contact are in slot 0
-  bool public contact;
+    // withdraw 1% to recipient and 1% to owner
 
-  //slot 1-257 for codex
-  bytes32[] public codex;
+    //to deny the other partner from withdrawing set the partner to a contract with a very complex fallback function that can cause an out of gas error. 
+    function withdraw() public {
+        uint amountToSend = address(this).balance / 100;
+        // perform a call without checking return
+        // The recipient can revert, the owner will still get their share
+        partner.call{value:amountToSend}("");
+        payable(owner).transfer(amountToSend);
+        // keep track of last withdrawal time
+        timeLastWithdrawn = block.timestamp;
+        withdrawPartnerBalances[partner] +=  amountToSend;
+    }
 
-  modifier contacted() {
-    assert(contact);
-    _;
-  }
-  
-  function makeContact() public {
-    contact = true;
-  }
+    // allow deposit of funds
+    receive() external payable {}
 
-  function record(bytes32 _content) contacted public {
-    codex.push(_content);
-  }
-
-  function retract() contacted public {
-    codex.length--;
-  }
-
-  function revise(uint i, bytes32 _content) contacted public {
-    codex[i] = _content;
-  }
+    // convenience function
+    function contractBalance() public view returns (uint) {
+        return address(this).balance;
+    }
 }
