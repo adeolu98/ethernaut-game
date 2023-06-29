@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.0;
+pragma solidity 0.6.2;
 pragma experimental ABIEncoderV2;
 
 import {console2} from "forge-std/console2.sol";
@@ -15,13 +15,35 @@ contract AttackTest is StdCheats, Test {
     /// @dev A function invoked before each test case is run.
 
     address alice = 0x80805ae3cbE23715C1f1807A03C5fb669541C2A9;
+    Attacker attacker;
+    DexTwo dex = DexTwo(0x88d6cdfC4388d080099cBF8dA3032F29D7BDE187);
 
     function setUp() public virtual {
         // Instantiate the contract-under-test.
         vm.prank(alice);
+
+        attacker = new Attacker();
     }
 
     function testAttack() public {
-        vm.prank(alice);
+        vm.startPrank(alice);
+
+        //send tokens to attacker
+        IERC20(dex.token1()).transfer(address(attacker), 10);
+        IERC20(dex.token2()).transfer(address(attacker), 10);
+
+        attacker.attack();
+
+        console.log(
+            IERC20(dex.token1()).balanceOf(address(dex)),
+            "dex token 1 bal"
+        );
+        console.log(
+            IERC20(dex.token2()).balanceOf(address(dex)),
+            "dex token 2 bal"
+        );
+
+        assertEq(IERC20(dex.token1()).balanceOf(address(dex)), 0);
+        assertEq(IERC20(dex.token2()).balanceOf(address(dex)), 0);
     }
 }
